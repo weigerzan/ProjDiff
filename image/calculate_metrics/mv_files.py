@@ -1,8 +1,8 @@
 import os
 import shutil
 
-source_path = 'exp/image_samples/proxdiff_100steps'
-output_path = 'exp/proxdiff_100steps'
+source_path = 'exp/image_samples/{images_folder_name}'
+output_path = 'exp/{images_folder_name}'
 os.makedirs(os.sep.join([output_path, 'orig']), exist_ok=True)
 os.makedirs(os.sep.join([output_path, 'generated']), exist_ok=True)
 n1 = n2 = 0

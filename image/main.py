@@ -28,7 +28,7 @@ def parse_args_and_config():
     parser.add_argument(
         "--doc",
         type=str,
-        required=True,
+        default="imagenet",
         help="A string for documentation purpose. "
         "Will be the name of the log folder.",
     )

@@ -309,7 +309,7 @@ class Diffusion(object):
                             avg_psnr += psnr
                             # print(x[i][j].shape)
                             avg_ssim += ssim(x[i][j].numpy(), orig.cpu().numpy(), data_range=x[i][j].numpy().max() - x[i][j].numpy().min(), channel_axis=0)
-                            LPIPS = loss_fn_vgg(orig, torch.tensor(x[i][j]).to(torch.float32).cuda())
+                            LPIPS = loss_fn_vgg(2*orig-1.0, 2*torch.tensor(x[i][j]).to(torch.float32).cuda()-1.0)
                             avg_lpips += LPIPS[0,0,0,0]
                 idx_so_far += y_0.shape[0]
 

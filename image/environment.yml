@@ -1,4 +1,4 @@
-name: ddrm
+name: projdiff_ir
 channels:
   - pytorch
   - conda-forge
