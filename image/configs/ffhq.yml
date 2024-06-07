@@ -1,0 +1,42 @@
+data:
+    dataset: "ffhq"
+    image_size: 256
+    channels: 3
+    logit_transform: false
+    uniform_dequantization: false
+    gaussian_dequantization: false
+    random_flip: true
+    rescaled: true
+    num_workers: 32
+    subset_1k: True
+    out_of_dist: False
+
+model:
+    type: 'ffhq'
+    image_size: 256
+    num_channels: 128
+    num_res_blocks: 1
+    channel_mult: ""
+    learn_sigma: True
+    class_cond: False
+    use_checkpoint: False
+    attention_resolutions: 16
+    num_heads: 4
+    num_head_channels: 64
+    num_heads_upsample: -1
+    use_scale_shift_norm: True
+    dropout: 0.0
+    resblock_updown: True
+    use_fp16: False
+    use_new_attention_order: False
+    var_type: 'fixedsmall'
+
+diffusion:
+    beta_schedule: linear
+    beta_start: 0.0001
+    beta_end: 0.02
+    num_diffusion_timesteps: 1000
+
+sampling:
+    batch_size: 1
+    last_only: True
