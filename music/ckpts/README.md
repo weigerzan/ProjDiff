@@ -1,5 +1,5 @@
 ## Pretrained checkpoints
-It is possible to download the models we used for our paper using the following links:
+This README.md is from https://github.com/gladia-research-group/multi-source-diffusion-models.
 
  * [MSDM](https://drive.google.com/file/d/1mfozibogvNrUaeS283OBz26MWNeZv-OO/view?usp=share_link): checkpoints for generation, inpainting, and (optionally) separation.
  * [Weakly MSDM](https://drive.google.com/file/d/1A33CjKPfmaqsgSXyDqr1Pbd39y_KHgU1/view?usp=share_link): checkpoints useful only for separation.

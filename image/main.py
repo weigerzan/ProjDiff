@@ -50,7 +50,7 @@ def parse_args_and_config():
         "-i",
         "--image_folder",
         type=str,
-        default="opt_images_20steps_1.7_0.0",
+        default="images",
         help="The folder name of samples",
     )
     parser.add_argument(

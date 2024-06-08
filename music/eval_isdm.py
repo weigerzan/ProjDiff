@@ -9,31 +9,57 @@ from main.separation import separate_dataset, MSDMSeparator
 from core.sep_isdm_ProjDiff import ISDMSeparator_ProjDiff
 import torch
 from metrics.cal_sisdr import calculate_sisdr
+import argparse
+import yaml
 
-def differential_with_dirac(x, sigma, denoise_fn, mixture, source_id=0):
-    num_sources = x.shape[1]
-    x[:, [source_id], :] = mixture - (x.sum(dim=1, keepdim=True) - x[:, [source_id], :])
-    score = (x - denoise_fn(x, sigma=sigma)) / sigma
-    scores = [score[:, si] for si in range(num_sources)]
-    ds = [s - score[:, source_id] for s in scores]
-    return torch.stack(ds, dim=1)
+def parse_args_and_config():
+    parser = argparse.ArgumentParser(description=globals()["__doc__"])
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="eval_weakly_msdm.yaml",
+        help="The folder name of samples",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="ISDM_projdiff",
+        help="The folder name of samples",
+    )
+    parser.add_argument(
+        "--lr", type=float, default=0.1, help="Step-size"
+    )
+    parser.add_argument(
+        "--N", type=int, default=5, help="N repeats"
+    )
+    parser.add_argument(
+        "--beta", type=float, default=0.5, help="Momentum"
+    )
+    parser.add_argument(
+        "--resume", type=store_true, help="Resume from last run"
+    )
+    args = parser.parse_args()
+    with open(os.sep.join(['exp', args.config]), "r") as file:
+        config = yaml.safe_load(file)
+    return args, config
+
 
 def main():
-    dataset_path = 'data/slakh2100/test'
-    model_path = ['ckpts/laced-dream-329/epoch=443-valid_loss=0.002.ckpt',\
-            'ckpts/ancient-voice-289/epoch=258-valid_loss=0.019.ckpt',\
-            'ckpts/honest-fog-332/epoch=407-valid_loss=0.007.ckpt',\
-            'ckpts/ruby-dew-290/epoch=236-valid_loss=0.010.ckpt']
-    output_dir = 'output/separations/ISDM_ProjDiff'
-    source_id = 0
-    sigma_min = 1e-4
-    sigma_max = 1.0
-    num_steps = 150
-    batch_size = 32
-    n_repeats=5
-    lr=0.1
-    beta=0.5
-    resume = True
+    args, config = parse_args_and_config
+    dataset_path = config.dataset_path
+    model_path = [config.separation.model_paths.bass,\
+         config.separation.model_paths.drums,\
+        config.separation.model_paths.guitar,\
+        config.separation.model_paths.piano]
+    output_dir = os.sep.join(['output/separations', args.output_dir])
+    sigma_min = config.separation.sigma_min
+    sigma_max = config.separation.sigma_max
+    num_steps = config.separation.num_steps
+    batch_size = config.separation.batch_size
+    n_repeats=args.N
+    lr=args.lr
+    beta=args.beta
+    resume = args.resume
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     dataset = ChunkedSupervisedDataset(
@@ -53,6 +79,26 @@ def main():
         lr=lr,
         beta=beta
     )
+
+    chunk_data = []
+    for i in range(len(dataset)):
+        start_sample, end_sample = dataset.get_chunk_indices(i)
+        chunk_data.append(
+            {
+                "chunk_index": i,
+                "track": dataset.get_chunk_track(i),
+                "start_chunk_sample": start_sample,
+                "end_chunk_sample": end_sample,
+                "track_sample_rate": dataset.sample_rate,
+                "start_chunk_seconds": start_sample / dataset.sample_rate,
+                "end_chunk_in_seconds": end_sample / dataset.sample_rate,
+            }
+        )
+
+    # Save chunk metadata
+    with open(output_dir / "chunk_data.json", "w") as f:
+        json.dump(chunk_data, f, indent=1)
+
     separate_dataset(
         dataset=dataset,
         separator=separator,

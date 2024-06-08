@@ -25,10 +25,7 @@ def generate_track(
 ) -> torch.Tensor:
 
     def prox(x, source, mask):
-        # print(x[0])
         prox_x = x * (1-mask) + source * mask
-        # print(prox_x[0])
-        # print(source[0])
         return prox_x
     x = sigmas[0] * noises
     
@@ -79,23 +76,68 @@ def generate_inpaint_mask(sources, stem_to_inpaint):
         mask[:,stem_idx,:] = 0.0
     return mask
 
+def parse_args_and_config():
+    parser = argparse.ArgumentParser(description=globals()["__doc__"])
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="eval_generation.yaml",
+        help="The folder name of samples",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="projdiff",
+        help="The folder name of samples",
+    )
+    parser.add_argument(
+        "--stems_to_inpaint",
+        type=str,
+        default="BDG",
+        help="The folder name of samples",
+    )
+    parser.add_argument(
+        "--lr", type=float, default=0.05, help="Step-size"
+    )
+    parser.add_argument(
+        "--N", type=int, default=1, help="N repeats"
+    )
+    parser.add_argument(
+        "--beta", type=float, default=0.9, help="Momentum"
+    )
+    parser.add_argument(
+        "--resume", type=store_true, help="Resume from last run"
+    )
+    args = parser.parse_args()
+    with open(os.sep.join(['exp', args.config]), "r") as file:
+        config = yaml.safe_load(file)
+    return args, config
+
+
 def main():
-    dataset_path = '/nas/datasets/SLAKH/slakh2100/test'
-    model_path = 'ckpts/glorious-star-335/epoch=729-valid_loss=0.014.ckpt'
-    output_dir = 'output/partial_generating/BDG'
-    model = Model.load_from_checkpoint("ckpts/glorious-star-335/epoch=729-valid_loss=0.014.ckpt").cuda()
-    source_id = 0
-    sigma_min = 1e-4
-    sigma_max = 1.0
-    num_steps = 256
-    batch_size = 32
+    args, config = parse_args_and_config()
+    model_path = config.separation.model_path
+    output_dir = os.sep.join(['output/partial_generating', args.stems_to_inpaint, args.output_dir])
+    model = Model.load_from_checkpoint(configs.generation.model_path).cuda()
+    sigma_min = configs.generation.sigma_min
+    sigma_max = configs.generation.sigma_max
+    num_steps = configs.generation.num_steps
+    batch_size = configs.generation.batch_size
     sample_rate=22050
-    lr=0.05
-    n_repeats=1
-    beta=0.9
+    lr=args.lr
+    n_repeats=args.n_repeats
+    beta=args.beta
     stems = ["bass", "drums", "guitar", "piano"]
-    stems_to_inpaint = {"bass", "drums", "guitar"}
-    resume = False
+    stems_to_inpaint = []
+    if 'B' in args.stems_to_inpaint:
+        stems_to_inpaint.append("bass")
+    if 'D' in args.stems_to_inpaint:
+        stems_to_inpaint.append("drums")
+    if 'G' in args.stems_to_inpaint:
+        stems_to_inpaint.append("guitar")
+    if 'P' in args.stems_to_inpaint:
+        stems_to_inpaint.append("piano")
+    resume = args.resume
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     dataset = ChunkedSupervisedDataset(
@@ -120,7 +162,6 @@ def main():
         # torchaudio.save('test.wav', data[0, [0], :].cpu(), sample_rate=sample_rate)
         # print(data.shape)
         if inpaint_mask is None or inpaint_mask.shape[0] != data.shape[0]:
-            # 生成mask
             inpaint_mask = generate_inpaint_mask(data, stem_to_inpaint=stemidx_to_inpaint)
         # print(inpaint_mask[0])
         inpainted_tracks = generate_track(
