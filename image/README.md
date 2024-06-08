@@ -10,11 +10,7 @@ This project is based on:
 
 ## Environment
 
-You can set up the environment using the `environment.yml` (the requirement is the same as 
-
-[DDRM]: https://github.com/bahjat-kawar/ddrm
-
-). Run
+You can set up the environment using the `environment.yml`. Run
 
 ```bash
 conda env create -f environment.yml
