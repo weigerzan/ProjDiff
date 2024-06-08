@@ -1,9 +1,9 @@
 # @package _global_
 
-dataset_path: ${work_dir}/data/slakh2100/test
+dataset_path: data/slakh2100/test
 generation:
   _partial_: True 
-  model_path: ${work_dir}/ckpts/glorious-star-335/epoch=729-valid_loss=0.014.ckpt
+  model_path: ckpts/glorious-star-335/epoch=729-valid_loss=0.014.ckpt
   num_steps: 256
   batch_size: 32  # < Change to best fit your architecture
   sigma_min: 0.0001

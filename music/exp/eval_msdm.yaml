@@ -1,11 +1,11 @@
 # @package _global_
 
-dataset_path: ${work_dir}/data/slakh2100/test
-separation_dir: ${work_dir}/output/separations/msdm-dirac
+dataset_path: data/slakh2100/test
+separation_dir: output/separations/msdm-dirac
 separation:
   _target_: evaluation.experiments.separate_slakh_msdm
   _partial_: True 
-  model_path: ${work_dir}/ckpts/avid-darkness-164/epoch=419-valid_loss=0.014.ckpt
+  model_path: ckpts/avid-darkness-164/epoch=419-valid_loss=0.014.ckpt
   num_steps: 150
   batch_size: 32  # < Change to best fit your architecture # oldversion: 32
   sigma_min: 0.0001

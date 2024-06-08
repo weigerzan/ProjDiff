@@ -106,7 +106,7 @@ def parse_args_and_config():
         "--beta", type=float, default=0.9, help="Momentum"
     )
     parser.add_argument(
-        "--resume", type=store_true, help="Resume from last run"
+        "--resume", action="store_true", help="Resume from last run"
     )
     args = parser.parse_args()
     with open(os.sep.join(['exp', args.config]), "r") as file:

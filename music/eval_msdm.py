@@ -10,6 +10,7 @@ from core.sep_msdm_ProjDiff import MSDMSeparator_ProjDiff
 import torch
 from metrics.cal_sisdr import calculate_sisdr
 import yaml
+import json
 
 def parse_args_and_config():
     parser = argparse.ArgumentParser(description=globals()["__doc__"])
@@ -35,7 +36,7 @@ def parse_args_and_config():
         "--beta", type=float, default=0.5, help="Momentum"
     )
     parser.add_argument(
-        "--resume", type=store_true, help="Resume from last run"
+        "--resume", action="store_true", help="Resume from last run"
     )
     args = parser.parse_args()
     with open(os.sep.join(['exp', args.config]), "r") as file:
@@ -75,6 +76,16 @@ def main():
         beta=beta
     )
 
+    separate_dataset(
+        dataset=dataset,
+        separator=separator,
+        save_path=output_dir,
+        num_steps=num_steps,
+        batch_size=batch_size,
+        resume=resume
+    )
+
+
     chunk_data = []
     for i in range(len(dataset)):
         start_sample, end_sample = dataset.get_chunk_indices(i)
@@ -93,15 +104,7 @@ def main():
     # Save chunk metadata
     with open(output_dir / "chunk_data.json", "w") as f:
         json.dump(chunk_data, f, indent=1)
-
-    separate_dataset(
-        dataset=dataset,
-        separator=separator,
-        save_path=output_dir,
-        num_steps=num_steps,
-        batch_size=batch_size,
-        resume=resume
-    )
+        
     calculate_sisdr(dataset_path, output_dir)
 
 
