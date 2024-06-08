@@ -1,7 +1,5 @@
 # Image restoration of paper: Unleashing the Denoising Capability of Diffusion Prior for Solving Inverse Problems
 
-DDRM uses pre-trained [DDPMs](https://hojonathanho.github.io/diffusion/) for solving general linear inverse problems. It does so efficiently and without problem-specific supervised training.
-
 This project is based on:
 
 \- https://github.com/bahjat-kawar/ddrm (DDRM),
