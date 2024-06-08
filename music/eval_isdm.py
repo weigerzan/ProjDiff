@@ -42,8 +42,18 @@ def parse_args_and_config():
     args = parser.parse_args()
     with open(os.sep.join(['exp', args.config]), "r") as file:
         config = yaml.safe_load(file)
+    config = dict2namespace(config)
     return args, config
 
+def dict2namespace(config):
+    namespace = argparse.Namespace()
+    for key, value in config.items():
+        if isinstance(value, dict):
+            new_value = dict2namespace(value)
+        else:
+            new_value = value
+        setattr(namespace, key, new_value)
+    return namespace
 
 def main():
     args, config = parse_args_and_config()
@@ -108,7 +118,7 @@ def main():
     # Save chunk metadata
     with open(output_dir / "chunk_data.json", "w") as f:
         json.dump(chunk_data, f, indent=1)
-        
+
     calculate_sisdr(dataset_path, output_dir)
 
 
