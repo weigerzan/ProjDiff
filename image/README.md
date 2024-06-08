@@ -65,5 +65,3 @@ python main.py --ni --config imagenet_256.yml --doc imagenet --timesteps 100 --d
 ### Calculate the metrics
 
 We provide the example code for calculating the metrics in `calculate_metrics/`. Please first copy all the images using `mv_files.py` (mainly for FID calculation), and then run `cal_metrics.py` to calculate the metrics. Note that you may need to adjust the paths in the files.
-
-## References and Acknowledgements
