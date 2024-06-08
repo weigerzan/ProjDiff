@@ -1,76 +1,69 @@
-# Multi Source Diffusion Models
-Official repository for [Multi-Source Diffusion Models for Simultaneous Music Generation and Separation](https://arxiv.org/abs/2302.02257).
+# Source separation and partial generation of paper: Unleashing the Denoising Capability of Diffusion Prior for Solving Inverse Problems
 
-Demo website available [here](https://gladia-research-group.github.io/multi-source-diffusion-models/).
+This project is based on:
 
+\- https://github.com/gladia-research-group/multi-source-diffusion-models (MSDM),
 
-# Installation
-The environment for running our code can be installed using conda:
+## Environment
+
+You can set up the environment using the `env.yaml`. Run
+
 ```bash
-# Install environment
 conda env create -f env.yaml
-
-# Activate the environment
-conda activate msdm
+conda activate projdiff_music
 ```
 
-## Download dataset
-This step is optional and required only if you are interested in training a model from scratch or reproducing the results from the paper. 
+## Test dataset
 
-Detailed instructions to download our dataset can be found [here](data/README.md).
+The test dataset can be downloaded from https://drive.google.com/file/d/1Xo-bGORndJhenHvzf3eY5Lt0XCTgElZP/view?usp=sharing.
 
-## Download pretrained checkpoints
-It is possible to download the pretrained models we used in our experiments. These are useful to run the generation, inpainting and separation scripts available in this repository. 
+## Pre-trained checkpoints
 
-Detailed instruction to download our pretrained models can be found [here](ckpts/README.md). 
+Please follow the README.md in `./ckpts` to prepare the checkpoints.
 
-# Training
+## Experiments
 
-> ⚠️ **NOTE:**  
-> Before executing the training script, you have to rename the file `.env.tmp` to `.env` and change the **WANDB_\*** environment variables to match your 
-personal or institutional account.
+### Separation
 
-You can run the model by invoking the `train.py` script:
+#### MSDM
+
+Please run the following command
+
 ```bash
-# Activate environment
-conda activate msdm
-
-# Run training script
-PYTHONPATH=. python train.py exp=train_msdm
+python eval_msdm.py --config eval_msdm.yaml --output_dir {output_dir} --lr {lr} --N {N} --beta {beta}
 ```
-The results will be logged into your **Weight & Biases** account, using the information provided before.
 
-# Generation and Inpainting
+`output_dir` is the save folder of the results.
 
-## Run Notebook
-Take a look at the notebook `notebook/MSDM-generation.ipynb` for generation and inpainting examples.
+`lr` is the step size.
 
-> ⚠️ **NOTE:**  
-> Before running the notevook, download the `glorious-star-335` pretrained checkpoint.
+`N` is the number of repetitions.
 
-The notebook can be executed using the command
+`beta` is the momentum.
+
+To reproduce the results in the paper, you can leave all these parameters default. If you would like to tune `N` or `lr`, it is recommended to set them as `lr`=0.5/`N`.
+
+#### ISDM
+
+Please run the following command
+
 ```bash
-jupyter notebook notebooks/MSDM-generation.ipynb
+python eval_msdm.py --config eval_weakly_msdm.yaml --output_dir {output_dir} --lr {lr} --N {N} --beta {beta}
 ```
-The example found in our [demo website](ttps://gladia-research-group.github.io/multi-source-diffusion-models/)
- were produced using a similar notebook.
 
-# Separation evaluation
-> ⚠️ **NOTE:**   
-> You need to download the test set and the pretrained checkpoints in order to run the evaluation scripts.
+### Partial Generation
 
-Running the script
+Please run the following command
+
 ```bash
-# Run evaluation script for MSDM model
-PYTHONPATH=. python evaluate.py exp=eval_msdm_dirac
+python partial_generate.py --config eval_generation.yaml --output_dir {output_dir} --lr {lr} --N {N} --beta {beta} --stems_to_inpaint {stems_to_inpaint}
 ```
-will separate the test set and evaluate its quality using the SI-SNRi metric. After executing the script, the separation results can be found inside of the `output/separations/<exp-name>` directory. The metrics are reported inside of the `metrics.csv` file, in the separation folder.
 
-It is possible to use different configuration for the separation script, by changing the `exp=<config>` input argument.
-You can choose between the following configurations:
-```bash
-exp=eval_msdm_dirac # < second best performance
-exp=eval_msdm_gaussian
-exp=eval_weakly_msdm_dirac # < best performance (4x slower)
-exp=eval_weakly_msdm_gaussian
-```
+`stems_to_inpaint` is the stems to be generated, represented by their first letters. For example, to generate bass, drums, and guitar based on piano, `stems_to_inpaint ` should be "BDG".
+
+### Calculate metrics
+
+For Separation tasks, the SI-SDR_i metrics will be calculated after all the tracks are separated. If you'd like to adjust the calculation process, please refer to `metrics/cal_sisdr.py` for more details.
+
+For generation tasks, first, you need to arrange all the generated tracks into a generation folder and all the ground truth tracks into a gt folder, respectively. Then use the frechet_audio_distance package to calculate the FAD metrics. We provide example codes in the `metrics/mv_files.py` and `metrics/calculate_fad.py`.
+

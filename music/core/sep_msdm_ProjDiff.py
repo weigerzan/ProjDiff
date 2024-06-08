@@ -71,7 +71,6 @@ def separate_mixture_DDIM(
     x = sigmas[0] * noises # [batch_size, num-sources, sample-length]
     source_id = 0
     vis_wrapper  = tqdm.tqdm if use_tqdm else lambda x:x 
-    # print(sigmas)
     x_0 = None
     momentum = None
     for i in vis_wrapper(range(len(sigmas) - 1)):
@@ -94,7 +93,4 @@ def separate_mixture_DDIM(
                 momentum = beta * momentum + (1-beta) * diff
             x_0 += lr * momentum
             x_0 = prox(x_0, mixture)
-            # loss_obs = torch.mean(torch.norm(torch.sum(x_0, dim=1, keepdim=True) - mixture, dim=2)).item()
-            # loss_cons = torch.mean(torch.norm(x_0-x_0_pred, dim=[1,2])).item()
-            # print('obs loss:{}, cons loss:{}, lr:{}, sigma:{}'.format(loss_obs, loss_cons, lr, sigma))
     return x_0.cpu().detach()

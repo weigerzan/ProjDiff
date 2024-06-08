@@ -79,14 +79,12 @@ def separate_mixture_opt(
     x = sigmas[0] * noises # [batch_size, num-sources, sample-length]
     source_id = 0
     vis_wrapper  = tqdm.tqdm if use_tqdm else lambda x:x 
-    # print(sigmas)
     x_0 = None
     momentum = None
     for i in vis_wrapper(range(len(sigmas) - 1)):
         sigma, sigma_next = sigmas[i], sigmas[i+1]
         for k in range(n):
             A = torch.ones([1, 4]).cuda()
-            # B = torch.linalg.inv(torch.eye(4).cuda() + lamb * torch.matmul(A.T, A))
             num_sources = x.shape[1]
             if x_0 is None:
                 x_0_pred = denoise_fn(x, sigma=sigma)
@@ -94,7 +92,6 @@ def separate_mixture_opt(
             else:
                 x = x_0 + sigma * torch.randn_like(x_0)
                 x_0_pred = denoise_fn(x, sigma=sigma)
-            # beta=0.5
             diff = (x_0_pred - x_0)
             if momentum is None:
                 momentum=diff
@@ -104,5 +101,4 @@ def separate_mixture_opt(
             x_0 = prox(x_0, mixture)
             loss_obs = torch.mean(torch.norm(torch.sum(x_0, dim=1, keepdim=True) - mixture, dim=2)).item()
             loss_cons = torch.mean(torch.norm(x_0-x_0_pred, dim=[1,2])).item()
-            # print('obs loss:{}, cons loss:{}, lr:{}, sigma:{}'.format(loss_obs, loss_cons, lr, sigma))
     return x_0.cpu().detach()

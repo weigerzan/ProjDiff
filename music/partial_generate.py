@@ -11,6 +11,7 @@ import torch
 import torchaudio
 import math
 import argparse
+import yaml
 
 
 @torch.no_grad()
@@ -31,7 +32,6 @@ def generate_track(
     x = sigmas[0] * noises
     
     _, num_sources, _  = x.shape    
-    # Initialize default values
     source = torch.zeros_like(x) if source is None else source
     mask = torch.zeros_like(x) if mask is None else mask
     
@@ -39,15 +39,11 @@ def generate_track(
     
     x_0 = None
     momentum = None
-    # Noise source to current noise level
-
     # Iterate over all timesteps
     last_noises = noises
     for i in tqdm(range(len(sigmas) - 1)):
-        # print(i)
         sigma, sigma_next = sigmas[i], sigmas[i+1]
-        for k in range(n):
-            # print(k)
+        for k in range(n_repeats):
             num_sources = x.shape[1]
             if x_0 is None:
                 x_0_pred = denoise_fn(x, sigma=sigma)
@@ -56,18 +52,13 @@ def generate_track(
                 x = x_0 + sigma_next * noises + (sigma**2 - sigma_next**2)**0.5 * torch.randn_like(x_0) # Using Restricted Encoding
                 x_0_pred = denoise_fn(x, sigma=sigma)
             diff = (x_0_pred - x_0)
-            # diff = (x_0_pred - x) / sigma
             if momentum is None:
                 momentum=diff
             else:
                 momentum = beta * momentum + (1-beta) * diff
-            # print(momentum[0])
             x_0 += lr * momentum
-            # x += momentum * (sigma - sigma_next)
             x_0 = prox(x_0, source, mask)
             loss_cons = torch.mean(torch.norm(x_0-x_0_pred, dim=[1,2])).item()
-            # print(torch.norm(source[0]))
-            print('cons loss:{}, lr:{}, sigma:{}, norm:{}'.format(loss_cons, lr, sigma, torch.norm(x[0])))
     return x_0
 
 @torch.no_grad()
@@ -127,16 +118,17 @@ def dict2namespace(config):
 
 def main():
     args, config = parse_args_and_config()
-    model_path = config.separation.model_path
+    model_path = config.generation.model_path
+    dataset_path = config.dataset_path
     output_dir = os.sep.join(['output/partial_generating', args.stems_to_inpaint, args.output_dir])
-    model = Model.load_from_checkpoint(configs.generation.model_path).cuda()
-    sigma_min = configs.generation.sigma_min
-    sigma_max = configs.generation.sigma_max
-    num_steps = configs.generation.num_steps
-    batch_size = configs.generation.batch_size
+    model = Model.load_from_checkpoint(config.generation.model_path).cuda()
+    sigma_min = config.generation.sigma_min
+    sigma_max = config.generation.sigma_max
+    num_steps = config.generation.num_steps
+    batch_size = config.generation.batch_size
     sample_rate=22050
     lr=args.lr
-    n_repeats=args.n_repeats
+    n_repeats=args.N
     beta=args.beta
     stems = ["bass", "drums", "guitar", "piano"]
     stems_to_inpaint = []
@@ -167,14 +159,9 @@ def main():
     inpaint_mask = None
     chunk_id = 0
     for idx, batch_data in enumerate(loader):
-        # batch_data: List, 4 * bs * 1 * lens
-        # print(batch_data)
         data = torch.cat([batch_data[0], batch_data[1], batch_data[2], batch_data[3]], dim=1).cuda()
-        # torchaudio.save('test.wav', data[0, [0], :].cpu(), sample_rate=sample_rate)
-        # print(data.shape)
         if inpaint_mask is None or inpaint_mask.shape[0] != data.shape[0]:
             inpaint_mask = generate_inpaint_mask(data, stem_to_inpaint=stemidx_to_inpaint)
-        # print(inpaint_mask[0])
         inpainted_tracks = generate_track(
             source=data,
             mask=inpaint_mask,
@@ -185,7 +172,6 @@ def main():
             n_repeats=n_repeats,
             beta=beta
         )
-        # inpainted_tracks = {"bass": inpainted_tracks[:, 0, :], "drums", "guitar", "piano"}
         num_samples = inpainted_tracks.shape[0]
         for i in range(num_samples):
             chunk_path_separate = os.sep.join([output_dir, 'separate', str(chunk_id)])

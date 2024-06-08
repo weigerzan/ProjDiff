@@ -69,8 +69,6 @@ def load_and_resample_track(track_path, stems, resample_sr: int):
     return stem_to_track
 
 def calculate_sisdr(gt_path, pred_path):
-    # gt_path = 'data/slakh2100/test'
-    # pred_path = 'output/separations/PorjDiff'
     expected_sample_rate = 22050
     separation_sr = 22050
     stems = ("bass","drums","guitar","piano")
@@ -85,30 +83,21 @@ def calculate_sisdr(gt_path, pred_path):
         track = one_chunk["track"]
         chunk_idx = one_chunk["chunk_index"]
         start_sample = one_chunk["start_chunk_sample"]
-        #track_sample_rate = chunk_data["sample_rate"]
         if track not in track_to_chunks.keys():
             track_to_chunks[track] = [(start_sample, chunk_idx)]
         else:
             track_to_chunks[track].append( (start_sample, chunk_idx) )
-    # print(track_to_chunks.items())
     sisdr_list = {s:[] for s in stems}
     idx = 0
     for track, chunks in tqdm(track_to_chunks.items()):
-        # if idx > 50:
-        #     break
         idx += 1
         sorted_chunks = sorted(chunks)
         separated_wavs = {s:[] for s in stems}
         for _, chunk_idx in sorted_chunks:
-            # chunk_folder = separation_folder / str(chunk_idx)
             chunk_folder = os.sep.join([pred_path, str(chunk_idx)])
             
             separated_chunks, sr = load_chunks(chunk_folder, stems)
             assert sr == expected_sample_rate, f"{sr} different from expected sample-rate {expected_sample_rate}"
-            
-            # convert start sample to the chunk sample-rate
-            #start_sample = start_sample * sr // track_sample_rate
-
             for s in separated_chunks.keys():
                 separated_wavs[s].append(separated_chunks[s])
         for s in stems:
@@ -152,11 +141,6 @@ def calculate_sisdr(gt_path, pred_path):
                 sisdr = (sisnr(s, o, eps) - sisnr(m, o, eps)).item()
                 # df_entries[k].append((sisnr(s, o, eps) - sisnr(m, o, eps)).item())
                 sisdr_list[k].append(sisdr)
-            # Add chunk and sub-chunk info to dataframe entry
-            # df_entries["start_sample"].append(start_sample)
-            # df_entries["end_sample"].append(end_sample)
-        #     break
-        # break
     for k in sisdr_list.keys():
         print('{}:{}'.format(k, np.mean(sisdr_list[k])))
 if __name__ == '__main__':
