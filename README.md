@@ -1,5 +1,19 @@
 # ProjDiff
+
 Codebase for paper tiltled "Unleashing the Denoising Capability of Diffusion Prior for Solving Inverse Problems"
+
 Please refer to `image` and `music` for image restoration tasks and source separation & partial generation tasks, respectively.
 
-## References and Acknowledgements
+
+
+## Citation
+
+```
+@article{zhang2024unleashing,
+  title={Unleashing the Denoising Capability of Diffusion Prior for Solving Inverse Problems},
+  author={Zhang, Jiawei and Zhuang, Jiaxin and Jin, Cheng and Li, Gen and Gu, Yuantao},
+  journal={arXiv preprint arXiv:2406.06959},
+  year={2024}
+}
+```
+
