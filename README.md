@@ -1,5 +1,5 @@
 # ProjDiff
-[![arXiv](https://img.shields.io/badge/arXiv-2411.02465-b31b1b.svg)](https://arxiv.org/abs/2411.02465)
+[![arXiv](https://img.shields.io/badge/arXiv-2411.02465-b31b1b.svg)](https://arxiv.org/abs/2411.02465) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]
 
 Codebase for paper tiltled "Unleashing the Denoising Capability of Diffusion Prior for Solving Inverse Problems"
 
